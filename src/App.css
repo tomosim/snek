@@ -1,5 +1,9 @@
 .App {
   text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 }
 
 #title {
@@ -20,4 +24,20 @@
   height: 25px;
   max-width: 25px;
   margin: 1px 0;
+}
+
+#snekked {
+  background-color: rgb(36, 240, 230);
+}
+
+#start {
+  position: absolute;
+  top: 270px;
+  height: 90px;
+  width: 521px;
+  border: solid 4px rgb(36, 240, 230);
+  background-color: black;
+  color: rgb(36, 240, 230);
+  font-family: "Courier New", Courier, monospace;
+  font-size: 30pt;
 }

@@ -7,3 +7,17 @@
   font-family: "Courier New", Courier, monospace;
   font-size: 40pt;
 }
+
+#grid {
+  padding-left: 1px;
+  display: grid;
+  grid-template-columns: repeat(20, 26px);
+  background-color: rgb(36, 240, 230);
+}
+
+.grid-cell {
+  background-color: rgb(10, 10, 10);
+  height: 25px;
+  max-width: 25px;
+  margin: 1px 0;
+}

@@ -1,31 +1,179 @@
 import React, { Component } from "react";
-import Grid from "./Components/Grid";
 import "./App.css";
+import Start from "./Components/Start";
 
 class App extends Component {
-  state = { timer: null, playing: false };
+  state = {
+    gridArr: [],
+    snekArr: [{ x: 9, y: 9 }],
+    direction: "right",
+    food: null,
+    points: 0,
+    lost: false
+  };
+
+  componentDidMount() {
+    const gridArr = [];
+    for (let y = 0; y < 20; y++) {
+      for (let x = 0; x < 20; x++) {
+        gridArr.push(
+          <div
+            className={`grid-cell`}
+            id={
+              this.state.snekArr.find(cell => cell.x === x && cell.y === y)
+                ? "snekked"
+                : ""
+            }
+            key={`${x},${y}`}
+          />
+        );
+      }
+    }
+    const index = Math.floor(Math.random() * gridArr.length);
+    gridArr[index] = (
+      <div className={`grid-cell`} id="food" key={gridArr[index].key} />
+    );
+
+    this.setState({
+      gridArr,
+      food: index
+    });
+  }
+
   render() {
     return (
-      <div className="App">
+      <div className="App" tabIndex="0" onKeyDown={this.handleKeyPress}>
         <div id="title">snek2</div>
-        <Grid
-          snek={this.state.snekArr}
-          playing={this.state.playing}
-          play={this.play}
-          stop={this.stop}
-        />
+        <h2 id="points">{this.state.points}</h2>
+        {this.state.lost && <h1 id="loser">YOU LOSE</h1>}
+        <div id="grid">{this.state.gridArr}</div>
+        <Start play={this.play} />
       </div>
     );
   }
 
-  play = func => {
-    const timer = setInterval(func, 200);
-    this.setState({ timer, playing: true });
+  play = () => {
+    this.state.timer && clearInterval(this.state.timer);
+    const timer = setInterval(() => this.moveSnek(this.state.direction), 200);
+    this.setState({
+      lost: false,
+      timer,
+      points: 0,
+      snekArr: [{ x: 9, y: 9 }],
+      direction: "right"
+    });
   };
 
-  stop = () => {
+  handleKeyPress = event => {
+    const directions = ["up", "down", "left", "right"];
+    if (directions.includes(event.key.slice(5).toLowerCase()))
+      this.setState({ direction: event.key.slice(5).toLowerCase() });
+  };
+
+  moveSnek = direction => {
+    this.isDead();
+    this.setState({ direction });
+    const newSnekArr = [...this.state.snekArr];
+    let newPoints = 0;
+
+    if (
+      newSnekArr[newSnekArr.length - 1].x ==
+        this.state.gridArr[this.state.food].key.split(",")[0] &&
+      newSnekArr[newSnekArr.length - 1].y ==
+        this.state.gridArr[this.state.food].key.split(",")[1]
+    ) {
+      newPoints = 1;
+    } else newSnekArr.shift();
+
+    if (direction === "right") {
+      newSnekArr.push({
+        x:
+          this.state.snekArr[this.state.snekArr.length - 1].x + 1 > 19
+            ? 0
+            : this.state.snekArr[this.state.snekArr.length - 1].x + 1,
+        y: this.state.snekArr[this.state.snekArr.length - 1].y
+      });
+    }
+    if (direction === "left") {
+      newSnekArr.push({
+        x:
+          this.state.snekArr[this.state.snekArr.length - 1].x - 1 < 0
+            ? 19
+            : this.state.snekArr[this.state.snekArr.length - 1].x - 1,
+        y: this.state.snekArr[this.state.snekArr.length - 1].y
+      });
+    }
+    if (direction === "up") {
+      newSnekArr.push({
+        y:
+          this.state.snekArr[this.state.snekArr.length - 1].y - 1 < 0
+            ? 19
+            : this.state.snekArr[this.state.snekArr.length - 1].y - 1,
+        x: this.state.snekArr[this.state.snekArr.length - 1].x
+      });
+    }
+    if (direction === "down") {
+      newSnekArr.push({
+        y:
+          this.state.snekArr[this.state.snekArr.length - 1].y + 1 > 19
+            ? 0
+            : this.state.snekArr[this.state.snekArr.length - 1].y + 1,
+        x: this.state.snekArr[this.state.snekArr.length - 1].x
+      });
+    }
+
+    const gridArr = [];
+    for (let y = 0; y < 20; y++) {
+      for (let x = 0; x < 20; x++) {
+        gridArr.push(
+          <div
+            className={`grid-cell`}
+            id={
+              newSnekArr.find(cell => cell.x === x && cell.y === y)
+                ? "snekked"
+                : ""
+            }
+            key={`${x},${y}`}
+          />
+        );
+      }
+    }
+
+    const index = Math.floor(Math.random() * gridArr.length);
+    newPoints
+      ? (gridArr[index] = (
+          <div className={`grid-cell`} id="food" key={gridArr[index].key} />
+        ))
+      : (gridArr[this.state.food] = (
+          <div
+            className={`grid-cell`}
+            id="food"
+            key={gridArr[this.state.food].key}
+          />
+        ));
+
+    this.setState({
+      snekArr: newSnekArr,
+      gridArr,
+      food: newPoints ? index : this.state.food,
+      points: newPoints ? this.state.points + 1 : this.state.points + 0
+    });
+  };
+
+  isDead = () => {
+    const tail = this.state.snekArr.map(coord => `${coord.x},${coord.y}`);
+    tail.pop();
+    const head = `${this.state.snekArr[this.state.snekArr.length - 1].x},${
+      this.state.snekArr[this.state.snekArr.length - 1].y
+    }`;
+    if (tail.includes(head)) {
+      this.youLose();
+    }
+  };
+
+  youLose = () => {
     clearInterval(this.state.timer);
-    this.setState({ playing: false });
+    this.setState({ lost: true });
   };
 }
 

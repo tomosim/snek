@@ -1,11 +1,15 @@
 import React, { Component } from "react";
 import "./App.css";
 import Start from "./Components/Start";
+import { getHighscores, postHighscore } from "./api";
+import Scoreboard from "./Components/Scoreboard";
+import EnterName from "./Components/EnterName";
 
 class App extends Component {
   state = {
     gridArr: [],
     snekArr: [{ x: 9, y: 9 }],
+    scores: [],
     direction: "right",
     food: null,
     points: 0,
@@ -33,11 +37,13 @@ class App extends Component {
     gridArr[index] = (
       <div className={`grid-cell`} id="food" key={gridArr[index].key} />
     );
-
-    this.setState({
-      gridArr,
-      food: index
-    });
+    getHighscores().then(scores =>
+      this.setState({
+        gridArr,
+        food: index,
+        scores
+      })
+    );
   }
 
   render() {
@@ -45,8 +51,16 @@ class App extends Component {
       <div className="App" tabIndex="0" onKeyDown={this.handleKeyPress}>
         <div id="title">snek2</div>
         <h2 id="points">{this.state.points}</h2>
-        {this.state.lost && <h1 id="loser">YOU LOSE</h1>}
-        <div id="grid">{this.state.gridArr}</div>
+        <div id="main">
+          {this.state.scores.length && (
+            <Scoreboard highscores={this.state.scores} />
+          )}
+          <div id="game">
+            {this.state.lost && <h1 id="loser">YOU LOSE</h1>}
+            {this.state.lost && <EnterName addHighscore={this.postScore} />}
+            <div id="grid">{this.state.gridArr}</div>
+          </div>
+        </div>
         <Start play={this.play} />
       </div>
     );
@@ -174,6 +188,12 @@ class App extends Component {
   youLose = () => {
     clearInterval(this.state.timer);
     this.setState({ lost: true });
+  };
+
+  postScore = name => {
+    postHighscore(name, this.state.points).then(newScore =>
+      this.setState({ scores: [...this.state.scores, newScore], lost: false })
+    );
   };
 }
 
